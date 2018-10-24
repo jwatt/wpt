@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Service Worker: Update the registration with updating script type.</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="resources/test-helpers.sub.js"></script>
+<script>
+// These tests check that a registration is updated correctly with
+// different script type. At first Service Worker is register as
+// classic script type, then it is re-registered as module script type,
+// and vice versa. A main script is also updated at the same time.
+promise_test(async t => {
+  const script = 'resources/update-registration-with-type.py?classicfirst=1';
+  const scope = 'resources/update-registration-with-type';
+  await service_worker_unregister(t, scope);
+
+  // Register with classic script type.
+  let registration = await navigator.serviceWorker.register(script, {
+    scope: scope,
+    type: 'classic'
+  });
+  registration.installing.postMessage(' ');
+  let msgEvent = await new Promise(resolve => {
+    navigator.serviceWorker.onmessage = resolve;
+  });
+  assert_equals(msgEvent.data, 'A classic script.')
+
+  // Re-register with module script type.
+  registration = await navigator.serviceWorker.register(script, {
+    scope: scope,
+    type: 'module'
+  });
+  registration.installing.postMessage(' ');
+  msgEvent = await new Promise(resolve => {
+    navigator.serviceWorker.onmessage = resolve;
+  });
+  assert_equals(msgEvent.data, 'A module script.')
+}, 'Update the registration with a different script type (classic => module).');
+
+promise_test(async t => {
+  const script = 'resources/update-registration-with-type.py?classicfirst=0';
+  const scope = 'resources/update-registration-with-type';
+  await service_worker_unregister(t, scope);
+
+  // Register with module script type.
+  let registration = await navigator.serviceWorker.register(script, {
+    scope: scope,
+    type: 'module'
+  });
+  registration.installing.postMessage(' ');
+  let msgEvent = await new Promise(resolve => {
+    navigator.serviceWorker.onmessage = resolve;
+  });
+  assert_equals(msgEvent.data, 'A module script.')
+
+  // Re-register with classic script type.
+  registration = await navigator.serviceWorker.register(script, {
+    scope: scope,
+    type: 'classic'
+  });
+  registration.installing.postMessage(' ');
+  msgEvent = await new Promise(resolve => {
+    navigator.serviceWorker.onmessage = resolve;
+  });
+  assert_equals(msgEvent.data, 'A classic script.')
+}, 'Update the registration with a different script type (module => classic).');
+</script>
+</body>
